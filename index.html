@@ -678,15 +678,16 @@
         };
 
         // Base en forme de tortue : tête, pattes latérales et queue.
-        addRow(0, 2, 3); addRow(0, 12, 13);
-        addRow(1, 1, 14);
-        for (let y = 2; y <= 7; y += 1) addRow(y, 2, 13);
+        // Elle laisse volontairement moins de tuiles libres sur les bords.
+        addRow(1, 2, 5); addRow(1, 10, 13);
+        addRow(2, 1, 14);
+        for (let y = 3; y <= 7; y += 1) addRow(y, 2, 13);
         addRow(8, 1, 14);
-        addRow(9, 2, 3); addRow(9, 12, 13);
 
-        // Étages centraux, comme sur un Mahjong traditionnel.
+        // Quatre étages centraux : les paires importantes sont davantage cachées.
         for (let y = 3; y <= 6; y += 1) addRow(y, 4, 11, 1);
-        addRow(4, 6, 9, 2);
+        for (let y = 4; y <= 6; y += 1) addRow(y, 6, 9, 2);
+        for (let y = 4; y <= 5; y += 1) addRow(y, 7, 8, 3);
         return positions;
       }
 
