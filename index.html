@@ -167,6 +167,8 @@
     .board-wrap {
       position: relative;
       overflow: hidden;
+      width: min(1160px, 100%);
+      margin: 0 auto;
       border-radius: 16px;
       padding: 0;
       background: transparent;
@@ -189,7 +191,7 @@
       isolation: isolate;
       container-type: inline-size;
       width: 100%;
-      aspect-ratio: 1.38 / 1;
+      aspect-ratio: 1.52 / 1;
       overflow: hidden;
       border-radius: 15px;
       background:
@@ -212,6 +214,7 @@
     }
 
     .lantern {
+      display: none;
       position: absolute;
       z-index: 1;
       width: 4.5%;
@@ -370,7 +373,12 @@
 
     .special-glyph { font-size: clamp(11px, 2.85cqw, 31px); }
 
-    .side-panel { padding: 18px; }
+    .side-panel {
+      display: none;
+      max-width: 1160px;
+      margin: 10px auto 0;
+      padding: 18px;
+    }
 
     .side-panel h2 {
       margin: 0 0 13px;
