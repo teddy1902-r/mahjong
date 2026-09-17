@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#071523">
-  <title>Mahjong — Le jardin des lanternes</title>
+  <title>Mahjong — Le jardin de jade</title>
   <style>
     :root {
       --blue-deep: #005384;
@@ -555,7 +555,7 @@
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">🀄</div>
         <div>
-          <h1>Le jardin des lanternes</h1>
+          <h1>Le jardin de jade</h1>
           <p class="subtitle">Mahjong solitaire · trouve les tuiles par paires</p>
         </div>
       </div>
@@ -635,7 +635,7 @@
       const BOARD_HEIGHT = 10;
       const TOTAL_TILES = 144;
       const TOTAL_PAIRS = 72;
-      const SECRET_WORD = "lanterne";
+      const SECRET_ENDPOINT = "https://mahjong-secret.teddysegura-ts.workers.dev/secret";
 
       const board = document.getElementById("board");
       const statusLine = document.getElementById("statusLine");
@@ -1011,23 +1011,47 @@
         showToast("Mélange utilisé : il ne reste plus d’autre mélange.");
       }
 
-      function finishGame(won) {
+      async function loadSecretWord() {
+        try {
+          const response = await fetch(SECRET_ENDPOINT, {
+            method: "GET",
+            cache: "no-store",
+            headers: { Accept: "application/json" }
+          });
+          if (!response.ok) throw new Error(`Secret endpoint error: ${response.status}`);
+          const payload = await response.json();
+          return typeof payload.word === "string" ? payload.word.trim() : "";
+        } catch (error) {
+          console.warn("Impossible de récupérer le mot secret.", error);
+          return "";
+        }
+      }
+
+      async function finishGame(won) {
         gameOver = true;
         stopTimer();
         updateShuffleButtons();
         const secretReveal = document.getElementById("secretReveal");
+        const secretWord = document.getElementById("secretWord");
         document.getElementById("resultIcon").textContent = won ? "🎉" : "🌙";
         document.getElementById("resultTitle").textContent = won ? "Le jardin est libéré !" : "Le jardin s’endort…";
         document.getElementById("resultText").textContent = won
           ? "Toutes les tuiles ont retrouvé leur place. Quelle belle partie !"
           : "Il n’y a plus de paire disponible. Un nouveau mélange devrait t’aider.";
-        secretReveal.hidden = !won;
-        document.getElementById("secretWord").textContent = won ? SECRET_WORD : "";
+        secretReveal.hidden = true;
+        secretWord.textContent = "";
         document.getElementById("resultTime").textContent = formatTime(elapsedSeconds);
         document.getElementById("resultMoves").textContent = String(moves);
         document.getElementById("resultHints").textContent = String(hints);
         resultOverlay.hidden = false;
         playTone(won ? 760 : 190, .18, won ? "sine" : "triangle");
+
+        if (won) {
+          const remoteSecret = await loadSecretWord();
+          if (!gameOver) return;
+          secretWord.textContent = remoteSecret;
+          secretReveal.hidden = !remoteSecret;
+        }
       }
 
       function updateStats() {
