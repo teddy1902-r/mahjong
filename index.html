@@ -469,6 +469,19 @@
     .result-card h2 { margin: 9px 0 7px; color: #ffe8a9; font-family: Georgia, serif; font-size: 2rem; }
     .result-card p { margin: 0; color: rgba(237, 246, 237, .78); line-height: 1.5; }
 
+    .secret-reveal {
+      margin: 18px auto 2px;
+      padding: 13px 16px;
+      border: 1px solid rgba(116, 241, 197, .48);
+      border-radius: 15px;
+      background: linear-gradient(145deg, rgba(39, 193, 145, .2), rgba(5, 68, 74, .35));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 20px rgba(48, 218, 169, .12);
+    }
+
+    .secret-reveal[hidden] { display: none; }
+    .secret-label { display: block; color: rgba(231, 255, 245, .72); font-size: .78rem; }
+    .secret-word { display: block; margin-top: 4px; color: #a4ffdc; font-family: Georgia, serif; font-size: 1.65rem; font-weight: 900; letter-spacing: .12em; text-transform: lowercase; }
+
     .result-stats { display: flex; justify-content: center; gap: 22px; margin: 22px 0; }
     .result-stat strong { display: block; color: #fff0b5; font-size: 1.35rem; }
     .result-stat span { color: rgba(224, 241, 231, .58); font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; }
@@ -599,6 +612,10 @@
       <div class="result-icon" id="resultIcon">🎉</div>
       <h2 id="resultTitle">Le jardin est libéré !</h2>
       <p id="resultText">Toutes les tuiles ont retrouvé leur place.</p>
+      <div class="secret-reveal" id="secretReveal" hidden>
+        <span class="secret-label">Mot secret à saisir dans Certitude :</span>
+        <strong class="secret-word" id="secretWord"></strong>
+      </div>
       <div class="result-stats">
         <div class="result-stat"><strong id="resultTime">00:00</strong><span>temps</span></div>
         <div class="result-stat"><strong id="resultMoves">0</strong><span>coups</span></div>
@@ -618,6 +635,7 @@
       const BOARD_HEIGHT = 10;
       const TOTAL_TILES = 144;
       const TOTAL_PAIRS = 72;
+      const SECRET_WORD = "lanterne";
 
       const board = document.getElementById("board");
       const statusLine = document.getElementById("statusLine");
@@ -997,11 +1015,14 @@
         gameOver = true;
         stopTimer();
         updateShuffleButtons();
+        const secretReveal = document.getElementById("secretReveal");
         document.getElementById("resultIcon").textContent = won ? "🎉" : "🌙";
         document.getElementById("resultTitle").textContent = won ? "Le jardin est libéré !" : "Le jardin s’endort…";
         document.getElementById("resultText").textContent = won
           ? "Toutes les tuiles ont retrouvé leur place. Quelle belle partie !"
           : "Il n’y a plus de paire disponible. Un nouveau mélange devrait t’aider.";
+        secretReveal.hidden = !won;
+        document.getElementById("secretWord").textContent = won ? SECRET_WORD : "";
         document.getElementById("resultTime").textContent = formatTime(elapsedSeconds);
         document.getElementById("resultMoves").textContent = String(moves);
         document.getElementById("resultHints").textContent = String(hints);
