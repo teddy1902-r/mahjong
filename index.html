@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#071523">
+  <title>Mahjong — Le jardin des lanternes</title>
+  <style>
+    :root {
+      --night: #071523;
+      --night-2: #0b2031;
+      --ink: #102337;
+      --gold: #f5c76b;
+      --gold-soft: #ffe4a6;
+      --jade: #42d4a1;
+      --coral: #ff7b72;
+      --mist: #d7edf0;
+      --panel: rgba(12, 34, 51, .82);
+      --line: rgba(255, 226, 165, .22);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-width: 320px; background: var(--night); }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: #f8f4e8;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 5%, rgba(67, 185, 159, .22), transparent 32rem),
+        radial-gradient(circle at 90% 18%, rgba(246, 187, 91, .17), transparent 25rem),
+        linear-gradient(135deg, #06111f 0%, #0b2433 50%, #092032 100%);
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button { font: inherit; }
+
+    .app {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 24px clamp(12px, 3vw, 42px) 36px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      flex: 0 0 52px;
+      color: #142b35;
+      border: 2px solid rgba(255, 235, 174, .8);
+      border-radius: 17px;
+      background: linear-gradient(145deg, #fff1c7, #e2ad55);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .28), inset 0 2px 2px rgba(255,255,255,.8);
+      font-size: 28px;
+      transform: rotate(-5deg);
+    }
+
+    h1 {
+      margin: 0;
+      color: #fff6dc;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.65rem, 3.7vw, 3rem);
+      line-height: 1;
+      letter-spacing: .02em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: rgba(225, 241, 239, .72);
+      font-size: clamp(.77rem, 1.6vw, .98rem);
+      letter-spacing: .05em;
+    }
+
+    .top-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .control,
+    .primary-control {
+      border: 1px solid rgba(255, 222, 159, .27);
+      border-radius: 13px;
+      padding: 10px 14px;
+      color: #f5f5e9;
+      background: rgba(255,255,255,.07);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease, border-color .18s ease;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .control:hover,
+    .primary-control:hover { transform: translateY(-2px); background: rgba(255,255,255,.13); border-color: rgba(255, 228, 167, .6); }
+    .control:active,
+    .primary-control:active { transform: translateY(0) scale(.98); }
+    .control:focus-visible,
+    .primary-control:focus-visible,
+    .tile:focus-visible { outline: 3px solid #fff2b4; outline-offset: 3px; }
+
+    .primary-control {
+      color: #182a31;
+      font-weight: 800;
+      border-color: rgba(255, 241, 188, .7);
+      background: linear-gradient(135deg, #ffe7a4, #e6ae51);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      align-items: start;
+      gap: 16px;
+    }
+
+    .game-panel,
+    .side-panel {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(145deg, rgba(15, 45, 60, .88), rgba(5, 20, 35, .85));
+      box-shadow: 0 22px 60px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .game-panel { padding: clamp(10px, 2vw, 18px); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid rgba(208, 232, 215, .12);
+      border-radius: 14px;
+      background: rgba(0, 0, 0, .15);
+    }
+
+    .stat-label {
+      display: block;
+      color: rgba(213, 235, 229, .63);
+      font-size: .68rem;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      display: block;
+      margin-top: 3px;
+      color: #fff1ba;
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      font-weight: 800;
+    }
+
+    .board-wrap {
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      padding: clamp(8px, 1.4vw, 15px);
+      background: linear-gradient(145deg, #1b7c71, #0a484c 56%, #063741);
+      box-shadow: inset 0 0 0 2px rgba(248, 207, 111, .27), inset 0 0 26px rgba(0,0,0,.32), 0 13px 30px rgba(0,0,0,.18);
+    }
+
+    .board-wrap::before,
+    .board-wrap::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      border: 1px solid rgba(253, 217, 127, .2);
+    }
+
+    .board-wrap::before { inset: 7px; border-radius: 13px; }
+    .board-wrap::after { inset: 12px; border-radius: 10px; border-color: rgba(255,255,255,.07); }
+
+    .board-stage {
+      position: relative;
+      isolation: isolate;
+      container-type: inline-size;
+      width: 100%;
+      aspect-ratio: 1.65 / 1;
+      overflow: hidden;
+      border-radius: 13px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(111, 225, 180, .18), transparent 33%),
+        radial-gradient(circle at 10% 80%, rgba(237, 188, 88, .12), transparent 22%),
+        linear-gradient(145deg, #145d5d 0%, #0e4c51 48%, #083e48 100%);
+      box-shadow: inset 0 0 45px rgba(1, 28, 38, .65);
+    }
+
+    .board-stage::before {
+      content: "";
+      position: absolute;
+      inset: 3%;
+      opacity: .5;
+      border: 1px solid rgba(255, 222, 146, .22);
+      border-radius: 10px;
+      background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 9% 14%;
+      pointer-events: none;
+    }
+
+    .lantern {
+      position: absolute;
+      z-index: 1;
+      width: 5.5%;
+      aspect-ratio: 1;
+      border: 1px solid rgba(255, 222, 137, .65);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 219, 113, .72), rgba(255, 151, 62, .18) 55%, transparent 70%);
+      box-shadow: 0 0 25px rgba(255, 191, 79, .4);
+      pointer-events: none;
+    }
+
+    .lantern.one { top: 7%; left: 4%; }
+    .lantern.two { top: 9%; right: 5%; width: 4%; opacity: .76; }
+    .lantern.three { bottom: 5%; right: 17%; width: 3%; opacity: .62; }
+
+    #board {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+    }
+
+    .tile {
+      --lift: 0px;
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: calc(100% / 14.45);
+      height: calc(100% / 8.48);
+      left: calc((var(--x) + var(--z) * .13) * 100% / 14.45);
+      top: calc((var(--y) - var(--z) * .16) * 100% / 8.48);
+      z-index: calc(100 + var(--z) * 10);
+      padding: 0;
+      overflow: visible;
+      color: var(--ink);
+      border: 0;
+      border-radius: clamp(4px, .65vw, 9px);
+      background: transparent;
+      cursor: pointer;
+      transform: translate(var(--lift), var(--lift));
+      transition: transform .18s ease, filter .18s ease, opacity .22s ease;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .tile::before {
+      content: "";
+      position: absolute;
+      left: 5%;
+      right: -11%;
+      top: 7%;
+      bottom: -11%;
+      z-index: -2;
+      border-radius: inherit;
+      background: #a67435;
+      box-shadow: 2px 3px 0 #8c5f2e, 4px 5px 8px rgba(0, 0, 0, .35);
+    }
+
+    .tile::after {
+      content: "";
+      position: absolute;
+      inset: 0 6% 6% 0;
+      z-index: -1;
+      border: 1px solid rgba(124, 78, 29, .55);
+      border-radius: inherit;
+      background: linear-gradient(145deg, #fff9da 0%, #fff2bf 54%, #e7bf6e 100%);
+      box-shadow: inset 1px 1px 0 rgba(255,255,255,.95), inset -2px -3px 0 rgba(193, 140, 54, .2);
+    }
+
+    .tile:hover { --lift: -4px; filter: brightness(1.08); }
+    .tile.is-free { filter: saturate(1.05); }
+    .tile.is-blocked { filter: saturate(.42) brightness(.76); cursor: not-allowed; }
+    .tile.is-selected { --lift: -8px; filter: saturate(1.35) brightness(1.12) drop-shadow(0 0 8px rgba(255,231,126,.75)); }
+    .tile.is-hint { --lift: -7px; filter: saturate(1.4) brightness(1.2) drop-shadow(0 0 9px rgba(84, 239, 181, .9)); animation: hintPulse .52s ease-in-out 2; }
+    .tile.is-removing { opacity: 0; transform: translateY(-18px) scale(.7) rotate(4deg); pointer-events: none; }
+
+    .tile-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 94%;
+      padding: 4%;
+      line-height: 1;
+    }
+
+    .tile-corner {
+      align-self: flex-start;
+      min-height: 10%;
+      color: rgba(19, 48, 56, .55);
+      font-family: Georgia, serif;
+      font-size: clamp(6px, 1.1cqw, 14px);
+      font-weight: 700;
+    }
+
+    .tile-glyph {
+      display: grid;
+      place-items: center;
+      min-height: 55%;
+      color: #c44538;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(10px, 2.55cqw, 29px);
+      font-weight: 900;
+      text-shadow: 0 1px 0 #fff;
+    }
+
+    .tile-glyph.green { color: #13896e; }
+    .tile-glyph.blue { color: #2871a5; }
+    .tile-glyph.black { color: #243d48; }
+    .tile-glyph.gold { color: #bd7625; }
+
+    .tile-name {
+      color: rgba(20, 48, 56, .68);
+      font-size: clamp(5px, .85cqw, 11px);
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+
+    .pips {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      width: 62%;
+      height: 62%;
+      gap: 2px;
+    }
+
+    .pip {
+      display: block;
+      width: 52%;
+      aspect-ratio: 1;
+      justify-self: center;
+      align-self: center;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: inset 1px 1px 0 rgba(255,255,255,.55), 0 1px 1px rgba(0,0,0,.18);
+    }
+
+    .bamboo-symbols {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      width: 73%;
+      height: 66%;
+      gap: 0 8%;
+      color: #218c70;
+      font-size: clamp(8px, 1.8cqw, 20px);
+    }
+
+    .bamboo-symbols span { filter: drop-shadow(0 1px 0 rgba(255,255,255,.75)); }
+
+    .special-glyph { font-size: clamp(11px, 2.35cqw, 27px); }
+
+    .side-panel { padding: 18px; }
+
+    .side-panel h2 {
+      margin: 0 0 13px;
+      color: #ffe9ab;
+      font-family: Georgia, serif;
+      font-size: 1.15rem;
+    }
+
+    .howto {
+      margin: 0;
+      color: rgba(227, 242, 235, .76);
+      font-size: .88rem;
+      line-height: 1.55;
+    }
+
+    .key {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 15px;
+      color: rgba(227, 242, 235, .72);
+      font-size: .79rem;
+    }
+
+    .key-sample {
+      width: 28px;
+      height: 34px;
+      flex: 0 0 28px;
+      border-radius: 5px;
+      background: linear-gradient(145deg, #fff9da, #e5bd6d);
+      box-shadow: 3px 3px 0 #8c5f2e;
+    }
+
+    .key-sample.blocked { filter: saturate(.4) brightness(.75); }
+    .key-sample.selected { box-shadow: 0 0 10px #ffe982, 3px 3px 0 #8c5f2e; }
+
+    .side-rule { height: 1px; margin: 17px 0; background: rgba(255, 230, 169, .14); }
+
+    .status-line { min-height: 43px; margin-top: 16px; color: rgba(237, 247, 237, .75); font-size: .84rem; line-height: 1.45; }
+    .status-line strong { color: #ffe29c; }
+
+    .side-actions { display: grid; gap: 8px; margin-top: 14px; }
+    .side-actions button { width: 100%; }
+
+    .tip {
+      display: flex;
+      gap: 9px;
+      margin-top: 18px;
+      padding: 10px;
+      border: 1px solid rgba(76, 213, 165, .2);
+      border-radius: 12px;
+      color: rgba(222, 246, 232, .75);
+      background: rgba(53, 194, 150, .08);
+      font-size: .76rem;
+      line-height: 1.4;
+    }
+
+    .tip-icon { color: #75e3ba; font-size: 1rem; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(1, 11, 19, .72);
+      backdrop-filter: blur(9px);
+      animation: fadeIn .22s ease;
+    }
+
+    .overlay[hidden] { display: none; }
+
+    .result-card {
+      width: min(460px, 100%);
+      padding: 30px 26px 24px;
+      text-align: center;
+      border: 1px solid rgba(255, 228, 162, .42);
+      border-radius: 25px;
+      background: linear-gradient(145deg, #123c4a, #081e31);
+      box-shadow: 0 25px 70px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+
+    .result-icon { font-size: 3rem; }
+    .result-card h2 { margin: 9px 0 7px; color: #ffe8a9; font-family: Georgia, serif; font-size: 2rem; }
+    .result-card p { margin: 0; color: rgba(237, 246, 237, .78); line-height: 1.5; }
+
+    .result-stats { display: flex; justify-content: center; gap: 22px; margin: 22px 0; }
+    .result-stat strong { display: block; color: #fff0b5; font-size: 1.35rem; }
+    .result-stat span { color: rgba(224, 241, 231, .58); font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 25px;
+      z-index: 200;
+      max-width: min(90vw, 440px);
+      padding: 11px 15px;
+      color: #183039;
+      border: 1px solid rgba(255,255,255,.45);
+      border-radius: 999px;
+      background: #ffe8a4;
+      box-shadow: 0 10px 30px rgba(0,0,0,.3);
+      transform: translate(-50%, 20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+      font-size: .85rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+    @keyframes hintPulse { 50% { transform: translateY(-11px) scale(1.04); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    .shake { animation: shake .22s ease-in-out 2; }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .side-panel { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; align-items: start; }
+      .side-panel h2, .side-panel .howto { grid-column: 1; }
+      .side-panel .key, .side-panel .side-rule, .side-panel .status-line, .side-panel .side-actions, .side-panel .tip { grid-column: 2; }
+      .side-panel .side-rule { margin: 0; }
+    }
+
+    @media (max-width: 620px) {
+      .app { padding: 14px 8px 25px; }
+      .topbar { align-items: center; flex-direction: column; gap: 14px; }
+      .brand { align-self: flex-start; }
+      .top-actions { width: 100%; justify-content: stretch; }
+      .top-actions button { flex: 1; padding-inline: 8px; font-size: .78rem; }
+      .game-panel { padding: 8px; border-radius: 19px; }
+      .stats { gap: 5px; }
+      .stat { padding: 8px 6px; text-align: center; }
+      .stat-label { font-size: .56rem; letter-spacing: .08em; }
+      .stat-value { font-size: .95rem; }
+      .board-wrap { padding: 7px; border-radius: 14px; }
+      .board-stage { aspect-ratio: 1.15 / 1; }
+      .tile { width: calc(100% / 14.45); height: calc(100% / 8.48); }
+      .tile-corner { font-size: clamp(4px, 1.4cqw, 8px); }
+      .tile-glyph { font-size: clamp(8px, 3cqw, 20px); }
+      .tile-name { font-size: clamp(4px, 1.2cqw, 8px); }
+      .bamboo-symbols { gap: 0 4%; }
+      .side-panel { display: block; padding: 15px; border-radius: 19px; }
+      .side-panel .key, .side-panel .side-rule, .side-panel .status-line, .side-panel .side-actions, .side-panel .tip { margin-top: 13px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">🀄</div>
+        <div>
+          <h1>Le jardin des lanternes</h1>
+          <p class="subtitle">Mahjong solitaire · trouve les tuiles par paires</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="control" id="hintTop" type="button">💡 Indice</button>
+        <button class="control" id="shuffleTop" type="button">🔀 Mélanger</button>
+        <button class="primary-control" id="newTop" type="button">✦ Nouvelle partie</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="game-panel" aria-label="Plateau de Mahjong">
+        <div class="stats" aria-live="polite">
+          <div class="stat"><span class="stat-label">Temps</span><span class="stat-value" id="timeValue">00:00</span></div>
+          <div class="stat"><span class="stat-label">Paires</span><span class="stat-value" id="pairsValue">0 / 72</span></div>
+          <div class="stat"><span class="stat-label">Coups</span><span class="stat-value" id="movesValue">0</span></div>
+          <div class="stat"><span class="stat-label">Restantes</span><span class="stat-value" id="remainingValue">144</span></div>
+        </div>
+
+        <div class="board-wrap">
+          <div class="board-stage" id="boardStage">
+            <span class="lantern one"></span>
+            <span class="lantern two"></span>
+            <span class="lantern three"></span>
+            <div id="board" aria-label="Tuiles de Mahjong"></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <h2>Les règles du jardin</h2>
+        <p class="howto">Retire deux tuiles identiques quand elles sont libres. Une tuile est libre si aucune autre ne la recouvre et si son côté gauche ou droit est dégagé.</p>
+
+        <div class="key"><span class="key-sample"></span><span>Tuile disponible</span></div>
+        <div class="key"><span class="key-sample blocked"></span><span>Tuile bloquée</span></div>
+        <div class="key"><span class="key-sample selected"></span><span>Tuile sélectionnée</span></div>
+
+        <div class="side-rule"></div>
+        <div class="status-line" id="statusLine">Choisis une tuile pour commencer.</div>
+
+        <div class="side-actions">
+          <button class="control" id="hintSide" type="button">💡 Trouver une paire</button>
+          <button class="control" id="shuffleSide" type="button">🔀 Remélanger les tuiles</button>
+          <button class="primary-control" id="newSide" type="button">✦ Recommencer</button>
+        </div>
+
+        <div class="tip"><span class="tip-icon">✧</span><span>Les fleurs se marient entre elles, tout comme les saisons.</span></div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="overlay" id="resultOverlay" hidden>
+    <section class="result-card" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <div class="result-icon" id="resultIcon">🎉</div>
+      <h2 id="resultTitle">Le jardin est libéré !</h2>
+      <p id="resultText">Toutes les tuiles ont retrouvé leur place.</p>
+      <div class="result-stats">
+        <div class="result-stat"><strong id="resultTime">00:00</strong><span>temps</span></div>
+        <div class="result-stat"><strong id="resultMoves">0</strong><span>coups</span></div>
+        <div class="result-stat"><strong id="resultHints">0</strong><span>indices</span></div>
+      </div>
+      <button class="primary-control" id="newResult" type="button">✦ Jouer encore</button>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const BOARD_WIDTH = 14;
+      const BOARD_HEIGHT = 8;
+      const TOTAL_TILES = 144;
+      const TOTAL_PAIRS = 72;
+
+      const board = document.getElementById("board");
+      const statusLine = document.getElementById("statusLine");
+      const timeValue = document.getElementById("timeValue");
+      const pairsValue = document.getElementById("pairsValue");
+      const movesValue = document.getElementById("movesValue");
+      const remainingValue = document.getElementById("remainingValue");
+      const resultOverlay = document.getElementById("resultOverlay");
+      const toast = document.getElementById("toast");
+
+      const tileDefinitions = [
+        ...Array.from({ length: 9 }, (_, i) => ({ id: `dots-${i + 1}`, kind: "dots", value: i + 1, color: "red", label: `${i + 1} cercles` })),
+        ...Array.from({ length: 9 }, (_, i) => ({ id: `bamboo-${i + 1}`, kind: "bamboo", value: i + 1, color: "green", label: `${i + 1} bambous` })),
+        ...Array.from({ length: 9 }, (_, i) => ({ id: `characters-${i + 1}`, kind: "characters", value: i + 1, color: "red", label: `${i + 1} caractères` })),
+        { id: "wind-east", kind: "special", group: "winds", glyph: "東", color: "blue", label: "Vent d’est" },
+        { id: "wind-south", kind: "special", group: "winds", glyph: "南", color: "blue", label: "Vent du sud" },
+        { id: "wind-west", kind: "special", group: "winds", glyph: "西", color: "blue", label: "Vent d’ouest" },
+        { id: "wind-north", kind: "special", group: "winds", glyph: "北", color: "blue", label: "Vent du nord" },
+        { id: "dragon-red", kind: "special", group: "dragons", glyph: "中", color: "red", label: "Dragon rouge" },
+        { id: "dragon-green", kind: "special", group: "dragons", glyph: "發", color: "green", label: "Dragon vert" },
+        { id: "dragon-white", kind: "special", group: "dragons", glyph: "白", color: "blue", label: "Dragon blanc" },
+        { id: "flower-plum", kind: "bonus", group: "flowers", glyph: "梅", color: "red", label: "Fleur de prunier" },
+        { id: "flower-orchid", kind: "bonus", group: "flowers", glyph: "蘭", color: "blue", label: "Orchidée" },
+        { id: "flower-bamboo", kind: "bonus", group: "flowers", glyph: "竹", color: "green", label: "Bambou fleuri" },
+        { id: "flower-chrysanthemum", kind: "bonus", group: "flowers", glyph: "菊", color: "gold", label: "Chrysanthème" },
+        { id: "season-spring", kind: "bonus", group: "seasons", glyph: "春", color: "green", label: "Printemps" },
+        { id: "season-summer", kind: "bonus", group: "seasons", glyph: "夏", color: "red", label: "Été" },
+        { id: "season-autumn", kind: "bonus", group: "seasons", glyph: "秋", color: "gold", label: "Automne" },
+        { id: "season-winter", kind: "bonus", group: "seasons", glyph: "冬", color: "blue", label: "Hiver" }
+      ];
+
+      const definitionsById = new Map(tileDefinitions.map(definition => [definition.id, definition]));
+      const standardDefinitions = tileDefinitions.filter(definition => definition.kind !== "bonus");
+      const specialDefinitions = tileDefinitions.filter(definition => definition.kind === "bonus");
+
+      let tiles = [];
+      let selectedId = null;
+      let locked = false;
+      let gameOver = false;
+      let started = false;
+      let elapsedSeconds = 0;
+      let timerId = null;
+      let moves = 0;
+      let pairs = 0;
+      let hints = 0;
+      let toastTimer = null;
+
+      function shuffle(array) {
+        const copy = [...array];
+        for (let i = copy.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function buildLayout() {
+        const positions = [];
+        for (let y = 0; y < BOARD_HEIGHT; y += 1) {
+          for (let x = 0; x < BOARD_WIDTH; x += 1) {
+            positions.push({ x, y, z: 0 });
+          }
+        }
+        for (let y = 2; y <= 4; y += 1) {
+          for (let x = 2; x <= 11; x += 1) {
+            positions.push({ x, y, z: 1 });
+          }
+        }
+        positions.push({ x: 6, y: 3, z: 2 }, { x: 7, y: 3, z: 2 });
+        return positions;
+      }
+
+      function overlaps(a, b) {
+        return Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1;
+      }
+
+      function isCovered(tile, activeTiles = tiles) {
+        return activeTiles.some(other => other.id !== tile.id && other.z > tile.z && overlaps(tile, other));
+      }
+
+      function sideBlocked(tile, direction, activeTiles = tiles) {
+        return activeTiles.some(other => {
+          if (other.id === tile.id || other.z !== tile.z) return false;
+          const horizontalMatch = direction === "left"
+            ? other.x < tile.x && other.x + 1 >= tile.x
+            : other.x > tile.x && tile.x + 1 >= other.x;
+          return horizontalMatch && Math.abs(other.y - tile.y) < 1;
+        });
+      }
+
+      function isFree(tile, activeTiles = tiles) {
+        return !isCovered(tile, activeTiles) && (!sideBlocked(tile, "left", activeTiles) || !sideBlocked(tile, "right", activeTiles));
+      }
+
+      function canMatch(first, second) {
+        if (!first || !second) return false;
+        const a = definitionsById.get(first.typeId);
+        const b = definitionsById.get(second.typeId);
+        if (!a || !b) return false;
+        if (a.kind === "bonus" || b.kind === "bonus") return a.group === b.group;
+        return a.id === b.id;
+      }
+
+      function pairGroups() {
+        const groups = [];
+        standardDefinitions.forEach(definition => {
+          groups.push(definition.id, definition.id);
+        });
+        groups.push("flowers", "flowers", "seasons", "seasons");
+        return shuffle(groups);
+      }
+
+      function findPairForGroup(group, remaining) {
+        const available = remaining.filter(tile => isFree(tile, remaining));
+        const candidates = group === "flowers" || group === "seasons"
+          ? available.filter(tile => definitionsById.get(tile.typeId).group === group)
+          : available.filter(tile => tile.typeId === group);
+        if (candidates.length < 2) return null;
+        return shuffle(candidates).slice(0, 2);
+      }
+
+      function createGuaranteedDeal() {
+        const positions = buildLayout();
+        const deal = positions.map((position, index) => ({ ...position, id: index + 1, typeId: null }));
+        let remaining = [...deal];
+        const groups = pairGroups();
+
+        for (const group of groups) {
+          const free = shuffle(remaining.filter(tile => isFree(tile, remaining)));
+          if (free.length < 2) return null;
+          const pair = free.slice(0, 2);
+          const definitions = group === "flowers" || group === "seasons"
+            ? shuffle(specialDefinitions.filter(definition => definition.group === group))
+            : [definitionsById.get(group), definitionsById.get(group)];
+
+          pair.forEach((tile, index) => {
+            tile.typeId = definitions[index % definitions.length].id;
+          });
+          const used = new Set(pair.map(tile => tile.id));
+          remaining = remaining.filter(tile => !used.has(tile.id));
+        }
+
+        return remaining.length === 0 ? deal : null;
+      }
+
+      function createDeal() {
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          const guaranteed = createGuaranteedDeal();
+          if (guaranteed) return guaranteed;
+        }
+        // This fallback is only a safety net; the normal construction above is solvable.
+        const positions = buildLayout();
+        const deal = positions.map((position, index) => ({ ...position, id: index + 1, typeId: null }));
+        let pool = [];
+        standardDefinitions.forEach(definition => {
+          for (let i = 0; i < 4; i += 1) pool.push(definition.id);
+        });
+        specialDefinitions.forEach(definition => pool.push(definition.id));
+        shuffle(pool).forEach((typeId, index) => { deal[index].typeId = typeId; });
+        return deal;
+      }
+
+      function startNewGame() {
+        stopTimer();
+        tiles = createDeal();
+        selectedId = null;
+        locked = false;
+        gameOver = false;
+        started = false;
+        elapsedSeconds = 0;
+        moves = 0;
+        pairs = 0;
+        hints = 0;
+        resultOverlay.hidden = true;
+        renderBoard();
+        updateStats();
+        setStatus("Choisis une tuile pour commencer.");
+      }
+
+      function startTimer() {
+        if (started || gameOver) return;
+        started = true;
+        timerId = window.setInterval(() => {
+          elapsedSeconds += 1;
+          timeValue.textContent = formatTime(elapsedSeconds);
+        }, 1000);
+      }
+
+      function stopTimer() {
+        if (timerId !== null) window.clearInterval(timerId);
+        timerId = null;
+      }
+
+      function formatTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+        const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function renderBoard() {
+        board.innerHTML = "";
+        const fragment = document.createDocumentFragment();
+        tiles.forEach(tile => {
+          const definition = definitionsById.get(tile.typeId);
+          const element = document.createElement("button");
+          element.type = "button";
+          element.className = "tile";
+          element.dataset.id = String(tile.id);
+          element.style.setProperty("--x", tile.x);
+          element.style.setProperty("--y", tile.y);
+          element.style.setProperty("--z", tile.z);
+          element.setAttribute("aria-label", definition.label);
+          element.addEventListener("click", () => selectTile(tile.id));
+          element.innerHTML = tileMarkup(definition);
+          fragment.appendChild(element);
+        });
+        board.appendChild(fragment);
+        refreshTileStates();
+      }
+
+      function tileMarkup(definition) {
+        const corner = definition.kind === "dots" ? "●" : definition.kind === "bamboo" ? "♣" : "✦";
+        let glyph = "";
+        if (definition.kind === "dots") {
+          const pipCells = Array.from({ length: 9 }, (_, index) => {
+            const active = index < definition.value;
+            return `<span class="pip" style="visibility:${active ? "visible" : "hidden"}"></span>`;
+          }).join("");
+          glyph = `<span class="pips tile-glyph ${definition.color}">${pipCells}</span>`;
+        } else if (definition.kind === "bamboo") {
+          glyph = `<span class="bamboo-symbols">${Array.from({ length: Math.min(definition.value, 9) }, () => "<span>♣</span>").join("")}</span>`;
+        } else if (definition.kind === "characters") {
+          const character = "一二三四五六七八九"[definition.value - 1];
+          glyph = `<span class="tile-glyph special-glyph ${definition.color}">${character}</span>`;
+        } else {
+          glyph = `<span class="tile-glyph special-glyph ${definition.color}">${definition.glyph}</span>`;
+        }
+        return `<span class="tile-inner"><span class="tile-corner">${corner}</span>${glyph}<span class="tile-name">${definition.label}</span></span>`;
+      }
+
+      function refreshTileStates() {
+        tiles.forEach(tile => {
+          const element = board.querySelector(`[data-id="${tile.id}"]`);
+          if (!element) return;
+          const free = isFree(tile);
+          element.classList.toggle("is-free", free);
+          element.classList.toggle("is-blocked", !free);
+          element.classList.toggle("is-selected", tile.id === selectedId);
+          element.disabled = false;
+        });
+        updateStats();
+      }
+
+      function selectTile(id) {
+        if (locked || gameOver) return;
+        const tile = tiles.find(candidate => candidate.id === id);
+        if (!tile) return;
+        if (!isFree(tile)) {
+          showToast("Cette tuile est bloquée : libère un côté ou le dessus.");
+          const element = board.querySelector(`[data-id="${id}"]`);
+          element?.classList.add("shake");
+          window.setTimeout(() => element?.classList.remove("shake"), 450);
+          return;
+        }
+
+        startTimer();
+        if (selectedId === id) {
+          selectedId = null;
+          setStatus("Sélection annulée. Choisis une autre tuile.");
+          refreshTileStates();
+          return;
+        }
+
+        if (selectedId === null) {
+          selectedId = id;
+          setStatus("Bien. Choisis une tuile identique.");
+          refreshTileStates();
+          return;
+        }
+
+        const first = tiles.find(candidate => candidate.id === selectedId);
+        const second = tile;
+        moves += 1;
+        if (canMatch(first, second)) {
+          removePair(first, second);
+        } else {
+          locked = true;
+          setStatus("Ces tuiles ne forment pas une paire.");
+          const firstElement = board.querySelector(`[data-id="${first.id}"]`);
+          const secondElement = board.querySelector(`[data-id="${second.id}"]`);
+          firstElement?.classList.add("shake");
+          secondElement?.classList.add("shake");
+          playTone(170, .1, "sawtooth");
+          window.setTimeout(() => {
+            firstElement?.classList.remove("shake");
+            secondElement?.classList.remove("shake");
+            selectedId = null;
+            locked = false;
+            refreshTileStates();
+            if (!findAvailablePair()) setStatus("Plus aucune paire libre. Essaie de remélanger les tuiles.");
+          }, 480);
+        }
+        updateStats();
+      }
+
+      function removePair(first, second) {
+        selectedId = null;
+        locked = true;
+        pairs += 1;
+        playTone(540, .08, "sine");
+        [first, second].forEach(tile => board.querySelector(`[data-id="${tile.id}"]`)?.classList.add("is-removing"));
+        window.setTimeout(() => {
+          const removed = new Set([first.id, second.id]);
+          tiles = tiles.filter(tile => !removed.has(tile.id));
+          locked = false;
+          renderBoard();
+          if (tiles.length === 0) finishGame(true);
+          else if (!findAvailablePair()) setStatus("Le jardin est bloqué. Remélange les tuiles pour continuer.");
+          else setStatus("Belle paire ! Continue comme ça.");
+        }, 210);
+      }
+
+      function findAvailablePair() {
+        const free = tiles.filter(tile => isFree(tile));
+        for (let i = 0; i < free.length; i += 1) {
+          for (let j = i + 1; j < free.length; j += 1) {
+            if (canMatch(free[i], free[j])) return [free[i], free[j]];
+          }
+        }
+        return null;
+      }
+
+      function giveHint() {
+        if (gameOver || locked) return;
+        startTimer();
+        const pair = findAvailablePair();
+        if (!pair) {
+          setStatus("Aucune paire libre : remélange les tuiles pour débloquer la partie.");
+          showToast("Le plateau est bloqué. Essaie « Mélanger ».");
+          return;
+        }
+        hints += 1;
+        pair.forEach(tile => board.querySelector(`[data-id="${tile.id}"]`)?.classList.add("is-hint"));
+        setStatus(`Indice : ${definitionsById.get(pair[0].typeId).label}.`);
+        window.setTimeout(() => pair.forEach(tile => board.querySelector(`[data-id="${tile.id}"]`)?.classList.remove("is-hint")), 1200);
+        updateStats();
+      }
+
+      function reshuffleTiles() {
+        if (gameOver || locked) return;
+        const active = [...tiles];
+        if (active.length < 2) return;
+        const typePool = shuffle(active.map(tile => tile.typeId));
+        active.forEach((tile, index) => { tile.typeId = typePool[index]; });
+        selectedId = null;
+        renderBoard();
+        const pair = findAvailablePair();
+        setStatus(pair ? "Les tuiles ont été remélangées. À toi de jouer !" : "Le plateau reste bloqué : remélange encore une fois.");
+        showToast("Les tuiles ont changé de place.");
+      }
+
+      function finishGame(won) {
+        gameOver = true;
+        stopTimer();
+        document.getElementById("resultIcon").textContent = won ? "🎉" : "🌙";
+        document.getElementById("resultTitle").textContent = won ? "Le jardin est libéré !" : "Le jardin s’endort…";
+        document.getElementById("resultText").textContent = won
+          ? "Toutes les tuiles ont retrouvé leur place. Quelle belle partie !"
+          : "Il n’y a plus de paire disponible. Un nouveau mélange devrait t’aider.";
+        document.getElementById("resultTime").textContent = formatTime(elapsedSeconds);
+        document.getElementById("resultMoves").textContent = String(moves);
+        document.getElementById("resultHints").textContent = String(hints);
+        resultOverlay.hidden = false;
+        playTone(won ? 760 : 190, .18, won ? "sine" : "triangle");
+      }
+
+      function updateStats() {
+        timeValue.textContent = formatTime(elapsedSeconds);
+        pairsValue.textContent = `${pairs} / ${TOTAL_PAIRS}`;
+        movesValue.textContent = String(moves);
+        remainingValue.textContent = String(tiles.length);
+      }
+
+      function setStatus(message) {
+        statusLine.innerHTML = message;
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("visible");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("visible"), 2200);
+      }
+
+      function playTone(frequency, duration, type) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const context = new AudioContext();
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          oscillator.type = type;
+          oscillator.frequency.value = frequency;
+          gain.gain.setValueAtTime(.0001, context.currentTime);
+          gain.gain.exponentialRampToValueAtTime(.07, context.currentTime + .012);
+          gain.gain.exponentialRampToValueAtTime(.0001, context.currentTime + duration);
+          oscillator.connect(gain).connect(context.destination);
+          oscillator.start();
+          oscillator.stop(context.currentTime + duration + .02);
+          oscillator.addEventListener("ended", () => context.close());
+        } catch (_) {
+          // Audio is a pleasant extra, never a dependency for the game.
+        }
+      }
+
+      ["hintTop", "hintSide"].forEach(id => document.getElementById(id).addEventListener("click", giveHint));
+      ["shuffleTop", "shuffleSide"].forEach(id => document.getElementById(id).addEventListener("click", reshuffleTiles));
+      ["newTop", "newSide", "newResult"].forEach(id => document.getElementById(id).addEventListener("click", startNewGame));
+
+      startNewGame();
+    })();
+  </script>
+</body>
+</html>
