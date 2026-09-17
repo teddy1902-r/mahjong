@@ -336,20 +336,21 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      width: 72%;
-      height: 72%;
-      gap: 2px;
+      width: 82%;
+      height: 82%;
+      gap: 1px;
     }
 
     .pip {
       display: block;
-      width: 54%;
+      width: 78%;
       aspect-ratio: 1;
       justify-self: center;
       align-self: center;
       border-radius: 50%;
-      background: currentColor;
-      box-shadow: inset 1px 1px 0 rgba(255,255,255,.55), 0 1px 1px rgba(0,0,0,.18);
+      border: 1px solid #95152d;
+      background: radial-gradient(circle at 50% 50%, #d62945 0 25%, #fffaf6 27% 43%, #dc2c47 46% 69%, #94152d 72% 100%);
+      box-shadow: inset 1px 1px 0 rgba(255,255,255,.72), 0 1px 1px rgba(81, 8, 23, .34);
     }
 
     .bamboo-symbols {
