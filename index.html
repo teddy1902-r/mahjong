@@ -106,6 +106,8 @@
 
     .control:hover,
     .primary-control:hover { transform: translateY(-2px); background: rgba(255,255,255,.13); border-color: rgba(255, 228, 167, .6); }
+    .control:disabled,
+    .primary-control:disabled { opacity: .45; cursor: not-allowed; transform: none; }
     .control:active,
     .primary-control:active { transform: translateY(0) scale(.98); }
     .control:focus-visible,
@@ -545,7 +547,7 @@
       </div>
       <div class="top-actions">
         <button class="control" id="hintTop" type="button">💡 Indice</button>
-        <button class="control" id="shuffleTop" type="button">🔀 Mélanger</button>
+        <button class="control" id="shuffleTop" type="button">🔀 Mélanger <span class="shuffle-count">(1)</span></button>
         <button class="primary-control" id="newTop" type="button">✦ Nouvelle partie</button>
       </div>
     </header>
@@ -582,7 +584,7 @@
 
         <div class="side-actions">
           <button class="control" id="hintSide" type="button">💡 Trouver une paire</button>
-          <button class="control" id="shuffleSide" type="button">🔀 Remélanger les tuiles</button>
+          <button class="control" id="shuffleSide" type="button">🔀 Remélanger les tuiles <span class="shuffle-count">(1)</span></button>
           <button class="primary-control" id="newSide" type="button">✦ Recommencer</button>
         </div>
 
@@ -660,6 +662,7 @@
       let moves = 0;
       let pairs = 0;
       let hints = 0;
+      let shuffleUsed = false;
       let toastTimer = null;
 
       function shuffle(array) {
@@ -792,9 +795,11 @@
         moves = 0;
         pairs = 0;
         hints = 0;
+        shuffleUsed = false;
         resultOverlay.hidden = true;
         renderBoard();
         updateStats();
+        updateShuffleButtons();
         setStatus("Choisis une tuile pour commencer.");
       }
 
@@ -969,20 +974,28 @@
 
       function reshuffleTiles() {
         if (gameOver || locked) return;
+        if (shuffleUsed) {
+          showToast("Le mélange a déjà été utilisé pour cette partie.");
+          setStatus("Le mélange unique de cette partie a déjà été utilisé.");
+          return;
+        }
         const active = [...tiles];
         if (active.length < 2) return;
         const typePool = shuffle(active.map(tile => tile.typeId));
         active.forEach((tile, index) => { tile.typeId = typePool[index]; });
+        shuffleUsed = true;
         selectedId = null;
         renderBoard();
+        updateShuffleButtons();
         const pair = findAvailablePair();
-        setStatus(pair ? "Les tuiles ont été remélangées. À toi de jouer !" : "Le plateau reste bloqué : remélange encore une fois.");
-        showToast("Les tuiles ont changé de place.");
+        setStatus(pair ? "Les tuiles ont été remélangées. À toi de jouer !" : "Le plateau reste bloqué. Utilise un indice ou recommence la partie.");
+        showToast("Mélange utilisé : il ne reste plus d’autre mélange.");
       }
 
       function finishGame(won) {
         gameOver = true;
         stopTimer();
+        updateShuffleButtons();
         document.getElementById("resultIcon").textContent = won ? "🎉" : "🌙";
         document.getElementById("resultTitle").textContent = won ? "Le jardin est libéré !" : "Le jardin s’endort…";
         document.getElementById("resultText").textContent = won
@@ -1000,6 +1013,18 @@
         pairsValue.textContent = `${pairs} / ${TOTAL_PAIRS}`;
         movesValue.textContent = String(moves);
         remainingValue.textContent = String(tiles.length);
+      }
+
+      function updateShuffleButtons() {
+        ["shuffleTop", "shuffleSide"].forEach(id => {
+          const button = document.getElementById(id);
+          button.disabled = shuffleUsed || gameOver;
+          button.innerHTML = shuffleUsed
+            ? "🔀 Mélange utilisé"
+            : id === "shuffleTop"
+              ? "🔀 Mélanger <span class=\"shuffle-count\">(1)</span>"
+              : "🔀 Remélanger les tuiles <span class=\"shuffle-count\">(1)</span>";
+        });
       }
 
       function setStatus(message) {
